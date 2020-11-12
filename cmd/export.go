@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/nyudlts/go-aspace"
 	"github.com/spf13/cobra"
+	"log"
 	"os"
 )
 
@@ -31,7 +31,7 @@ func init() {
 }
 
 func exportEAD(client *aspace.ASClient) error {
-	fmt.Println("go-aspace lib", aspace.LibraryVersion)
+	log.Println("go-aspace lib", aspace.LibraryVersion)
 
 	//request the resource
 	resource, err := client.GetResource(repositoryId, resourceId)
@@ -41,18 +41,12 @@ func exportEAD(client *aspace.ASClient) error {
 
 	//create filename from resource ids
 	outputTitle := resource.ID0
-	if resource.ID1 != "" {
-		outputTitle = outputTitle + "-" + resource.ID1
+	for _, id := range []string{resource.ID1, resource.ID2, resource.ID3} {
+		if id != "" {
+			outputTitle = outputTitle + "-" + id
+		}
 	}
-	if resource.ID2 != "" {
-		outputTitle = outputTitle + "-" + resource.ID2
-	}
-	if resource.ID3 != "" {
-		outputTitle = outputTitle + "-" + resource.ID3
-	}
-
-	fmt.Println("Exporting", outputTitle)
-
+	log.Println("Exporting", outputTitle)
 	outputTitle = outputTitle + ".xml"
 
 	//request the ead of the resource
@@ -64,7 +58,7 @@ func exportEAD(client *aspace.ASClient) error {
 	//Validate the ead
 	err = aspace.ValidateEAD(ead)
 	if err != nil {
-		fmt.Println("WARNING: Exported EAD file did not pass validation")
+		log.Println("WARNING: Exported EAD file did not pass validation")
 	}
 
 	//create the output file
@@ -83,5 +77,6 @@ func exportEAD(client *aspace.ASClient) error {
 	writer.Flush()
 
 	//done
+	log.Println("Export complete")
 	return nil
 }
