@@ -8,10 +8,6 @@ import (
 	"os"
 )
 
-var env string
-var repositoryId int
-var resourceId int
-
 var exportCmd = &cobra.Command{
 	Use:   "export",
 	Short: "export an EAD from ArchivesSpace with go-aspace",

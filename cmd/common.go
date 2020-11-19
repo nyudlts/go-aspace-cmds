@@ -5,7 +5,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var client *aspace.ASClient
+var (
+	client *aspace.ASClient
+	env string
+	repositoryId int
+	resourceId int
+	timeout int
+)
 
 var rootCmd = &cobra.Command{
 	Use:   "go-aspace",
