@@ -58,7 +58,7 @@ func sample() error {
 		resourceIds := repositoryResourceIds[repoId]
 		resourceId := resourceIds[r1.Intn(len(resourceIds))]
 		fmt.Println("attempting to serialize", repoId, resourceId)
-		if GetEADFile(repoId, resourceId, "", "TEMP", client) == nil {
+		if getEADFile(repoId, resourceId, "", "TEMP", client) == nil {
 			validEadCount = validEadCount + 1
 		}
 	}

@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"bufio"
 	"github.com/nyudlts/go-aspace"
 	"github.com/spf13/cobra"
 	"log"
-	"os"
+	"strings"
 )
 
 var exportCmd = &cobra.Command{
@@ -39,40 +38,20 @@ func exportEAD(client *aspace.ASClient) error {
 	outputTitle := resource.ID0
 	for _, id := range []string{resource.ID1, resource.ID2, resource.ID3} {
 		if id != "" {
-			outputTitle = outputTitle + "-" + id
+			outputTitle = outputTitle + "_" + id
 		}
 	}
+
+	outputTitle = strings.ToLower(outputTitle)
 	log.Println("Exporting", outputTitle)
 	outputTitle = outputTitle + ".xml"
 
-	//request the ead of the resource
-	ead, err := client.SerializeEAD(repositoryId, resourceId, true, false, false, false, false)
+	err = getEADFile(repositoryId, resourceId, ".", resource.EADID, client)
 	if err != nil {
-		return err
+		panic(err)
 	}
-
-	//Validate the ead
-	err = aspace.ValidateEAD(ead)
-	if err != nil {
-		log.Println("WARNING: Exported EAD file did not pass validation")
-	}
-
-	//create the output file
-	output, err := os.Create(outputTitle)
-	if err != nil {
-		return err
-	}
-	defer output.Close()
-
-	//write ead []bytes to file
-	writer := bufio.NewWriter(output)
-	_, err = writer.Write(ead)
-	if err != nil {
-		return err
-	}
-	writer.Flush()
 
 	//done
-	log.Println("Export complete")
+	log.Printf("Export of %s complete\n", resource.EADID)
 	return nil
 }

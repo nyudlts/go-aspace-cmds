@@ -50,7 +50,7 @@ func exportRepo(repoId int, client *aspace.ASClient) error {
 
 		if resource.Publish == true {
 			log.Println("attempting", resource.EADID, resource.URI)
-			err = GetEADFile(repoId, resourceId, "tamwag", resource.EADID, client)
+			err = getEADFile(repoId, resourceId, "tamwag", resource.EADID, client)
 			if err != nil {
 				fmt.Println(err)
 				writer.WriteString(fmt.Sprintf("%s\t%v\n", resource.URI, err))

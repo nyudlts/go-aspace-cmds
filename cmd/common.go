@@ -34,7 +34,7 @@ func HandleError(err error) {
 	}
 }
 
-func GetEADFile(repoId int, resourceId int, location string, eadid string, client *aspace.ASClient) error {
+func getEADFile(repoId int, resourceId int, location string, eadid string, client *aspace.ASClient) error {
 
 	ead, err := client.GetEADAsByteArray(repoId, resourceId)
 	if err != nil {
