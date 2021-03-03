@@ -22,6 +22,7 @@ func init() {
 	exportCmd.Flags().StringVarP(&env, "environment", "e", "dev", "ArchivesSpace environment to be used for export")
 	exportCmd.Flags().IntVar(&repositoryId, "repository", 2, "Repository to be used for export")
 	exportCmd.Flags().IntVar(&resourceId, "resource", 1, "Resource to be exported")
+	exportCmd.Flags().BoolVar(&pretty, "pretty", false, "Pretty format finding aid")
 	rootCmd.AddCommand(exportCmd)
 }
 
@@ -46,7 +47,7 @@ func exportEAD(client *aspace.ASClient) error {
 	log.Println("Exporting", outputTitle)
 	outputTitle = outputTitle + ".xml"
 
-	err = getEADFile(repositoryId, resourceId, ".", resource.EADID, client)
+	err = getEADFile(repositoryId, resourceId, ".", resource.EADID, pretty, client)
 	if err != nil {
 		panic(err)
 	}

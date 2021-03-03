@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/nyudlts/go-aspace"
 	"github.com/spf13/cobra"
+	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -15,6 +17,8 @@ var (
 	repositoryId int
 	resourceId   int
 	timeout      int
+	location	string
+	pretty		bool
 )
 
 var rootCmd = &cobra.Command{
@@ -34,7 +38,7 @@ func HandleError(err error) {
 	}
 }
 
-func getEADFile(repoId int, resourceId int, location string, eadid string, client *aspace.ASClient) error {
+func getEADFile(repoId int, resourceId int, loc string, eadid string, pretty bool, client *aspace.ASClient) error {
 
 	ead, err := client.GetEADAsByteArray(repoId, resourceId)
 	if err != nil {
@@ -44,11 +48,13 @@ func getEADFile(repoId int, resourceId int, location string, eadid string, clien
 	if len(ead) <= 0 {
 		return fmt.Errorf("Returned a zero length array")
 	}
+
 	err = aspace.ValidateEAD(ead)
 	if err != nil {
 		return err
 	}
-	file := filepath.Join(location, fmt.Sprintf("%s.xml", eadid))
+
+	file := filepath.Join(loc, fmt.Sprintf("%s.xml", eadid))
 	eadFile, err := os.Create(file)
 	if err != nil {
 		return err
@@ -60,6 +66,23 @@ func getEADFile(repoId int, resourceId int, location string, eadid string, clien
 	if err != nil {
 		os.Remove(file)
 		return err
+	}
+
+	if pretty == true {
+		out, err := exec.Command("xmllint", "--format", file).Output()
+		if err != nil {
+			panic(err)
+		}
+
+		eadFile.Close()
+		f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+		writer = bufio.NewWriter(f)
+		writer.Write(out)
+		writer.Flush()
 	}
 	return nil
 }
