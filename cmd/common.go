@@ -19,6 +19,7 @@ var (
 	timeout      int
 	location	string
 	pretty		bool
+	input		string
 )
 
 var rootCmd = &cobra.Command{

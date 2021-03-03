@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-var exportCmd = &cobra.Command{
-	Use:   "export",
+var exportResourceCmd = &cobra.Command{
+	Use:   "export-resource",
 	Short: "export an EAD from ArchivesSpace with go-aspace",
 	Run: func(cmd *cobra.Command, args []string) {
 		client, err := aspace.NewClient(env, 20)
@@ -19,11 +19,11 @@ var exportCmd = &cobra.Command{
 }
 
 func init() {
-	exportCmd.Flags().StringVarP(&env, "environment", "e", "dev", "ArchivesSpace environment to be used for export")
-	exportCmd.Flags().IntVar(&repositoryId, "repository", 2, "Repository to be used for export")
-	exportCmd.Flags().IntVar(&resourceId, "resource", 1, "Resource to be exported")
-	exportCmd.Flags().BoolVar(&pretty, "pretty", false, "Pretty format finding aid")
-	rootCmd.AddCommand(exportCmd)
+	exportResourceCmd.Flags().StringVarP(&env, "environment", "e", "dev", "ArchivesSpace environment to be used for export")
+	exportResourceCmd.Flags().IntVar(&repositoryId, "repository", 2, "Repository to be used for export")
+	exportResourceCmd.Flags().IntVar(&resourceId, "resource", 1, "Resource to be exported")
+	exportResourceCmd.Flags().BoolVar(&pretty, "pretty", true, "Pretty format finding aid")
+	rootCmd.AddCommand(exportResourceCmd)
 }
 
 func exportEAD(client *aspace.ASClient) error {

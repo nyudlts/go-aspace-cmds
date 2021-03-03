@@ -14,7 +14,7 @@ func init() {
 	exportRepoCmd.Flags().StringVarP(&env, "environment", "e", "dev", "ArchivesSpace environment to be used for export")
 	exportRepoCmd.Flags().IntVarP(&repositoryId, "repository", "r", 2, "Repository to be used for export")
 	exportRepoCmd.Flags().StringVarP(&location, "location", "l", ".", "location to export finding aids")
-	exportCmd.Flags().BoolVar(&pretty, "pretty", false, "Pretty format finding aid")
+	exportRepoCmd.Flags().BoolVar(&pretty, "pretty", false, "Pretty format finding aid")
 	rootCmd.AddCommand(exportRepoCmd)
 }
 

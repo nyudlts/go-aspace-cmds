@@ -38,7 +38,7 @@ func init() {
 	validateCmd.Flags().IntVar(&timeout, "timeout", 20, "server timeout")
 	validateCmd.Flags().StringVarP(&validationType, "type", "t", "", "type of validation to perform")
 	validateCmd.Flags().BoolVar(&published, "published", true, "Export only published resources")
-	exportCmd.Flags().BoolVar(&pretty, "pretty", false, "Pretty format finding aid")
+	validateCmd.Flags().BoolVar(&pretty, "pretty", false, "Pretty format finding aid")
 	rootCmd.AddCommand(validateCmd)
 }
 
