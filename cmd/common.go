@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/nyudlts/go-aspace"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -17,11 +17,16 @@ var (
 	repositoryId int
 	resourceId   int
 	timeout      int
-	location	string
-	pretty		bool
-	input		string
+	location     string
+	pretty       bool
+	input        string
 )
 
+var shortNames = map[int]string{
+	2: "tamwag",
+	3: "fales",
+	6: "archives",
+}
 var rootCmd = &cobra.Command{
 	Use:   "go-aspace",
 	Short: "A tool to run go-aspace scripts",
@@ -39,51 +44,84 @@ func HandleError(err error) {
 	}
 }
 
+func exportEAD(resId int, outputDir string) error {
+	resource, err := client.GetResource(repositoryId, resId)
+	if err != nil {
+		msg := fmt.Errorf("WARNING Could not get resource %d from repo %d, skipping", resourceId, repositoryId)
+		return msg
+	}
+
+	if resource.Publish == true {
+
+		eadFilename := resource.EADID
+		if resource.EADID == "" {
+			eadFilename = fmt.Sprintf("%d_%d", repositoryId, resId)
+			log.Println(fmt.Sprintf("WARNING %s does not have an eadid, substituting %s as the filename.", resource.URI, eadFilename))
+		}
+
+		log.Println("INFO exporting", eadFilename+".xml", resource.URI)
+
+		err = getEADFile(repositoryId, resId, outputDir, eadFilename, pretty, client)
+		if err != nil {
+			log.Println("ERROR", err.Error())
+		} else {
+			log.Println("INFO", eadFilename+".xml exported")
+		}
+	}
+
+	return nil
+}
+
 func getEADFile(repoId int, resourceId int, loc string, eadid string, pretty bool, client *aspace.ASClient) error {
 
 	ead, err := client.GetEADAsByteArray(repoId, resourceId)
 	if err != nil {
-		return err
+		return fmt.Errorf("ArchiveSpace did not return an EAD file for %s", eadid)
 	}
 
 	if len(ead) <= 0 {
-		return fmt.Errorf("Returned a zero length array")
+		return fmt.Errorf("ArchiveSpace returned a zero length array")
 	}
 
 	err = aspace.ValidateEAD(ead)
 	if err != nil {
-		return err
+		return fmt.Errorf("EAD validation failed on %s", eadid)
 	}
 
-	file := filepath.Join(loc, fmt.Sprintf("%s.xml", eadid))
-	eadFile, err := os.Create(file)
-	if err != nil {
-		return err
-	}
-	defer eadFile.Close()
+	exportFile := fmt.Sprintf("%s.xml", eadid)
+	file := filepath.Join(loc, exportFile)
 
-	writer := bufio.NewWriter(eadFile)
-	_, err = writer.Write(ead)
+	err = ioutil.WriteFile(file, ead, 0644)
 	if err != nil {
-		os.Remove(file)
-		return err
+		return fmt.Errorf("Could not write to file %s", file)
 	}
 
 	if pretty == true {
-		out, err := exec.Command("xmllint", "--format", file).Output()
+		err = reformatXML(file)
 		if err != nil {
-			panic(err)
+			return err
 		}
-
-		eadFile.Close()
-		f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer f.Close()
-		writer = bufio.NewWriter(f)
-		writer.Write(out)
-		writer.Flush()
 	}
+
+	return nil
+}
+
+func reformatXML(path string) error {
+
+	reformattedBytes, err := exec.Command("xmllint", "--format", path).Output()
+	if err != nil {
+		return fmt.Errorf("could not reformat %s", path)
+	}
+
+	err = os.Remove(path)
+	if err != nil {
+		return fmt.Errorf("could not delete %s", path)
+	}
+
+	err = ioutil.WriteFile(path, reformattedBytes, 0644)
+	if err != nil {
+		return fmt.Errorf("could not write reformated bytes to %s", path)
+	}
+
 	return nil
 }

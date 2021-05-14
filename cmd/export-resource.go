@@ -1,58 +1,58 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/nyudlts/go-aspace"
 	"github.com/spf13/cobra"
-	"log"
-	"strings"
+	"os"
+	"path/filepath"
 )
+
+func init() {
+	exportResourceCmd.Flags().StringVarP(&env, "environment", "e", "dev", "ArchivesSpace environment to be used for export")
+	exportResourceCmd.Flags().IntVar(&repositoryId, "repository", 0, "Repository to be used for export")
+	exportResourceCmd.Flags().IntVar(&resourceId, "resource", 0, "Resource to be exported")
+	exportResourceCmd.Flags().StringVarP(&location, "location", "l", ".", "location to export finding aids")
+	exportResourceCmd.Flags().BoolVar(&pretty, "pretty", false, "Pretty format finding aid")
+	rootCmd.AddCommand(exportResourceCmd)
+}
 
 var exportResourceCmd = &cobra.Command{
 	Use:   "export-resource",
 	Short: "export an EAD from ArchivesSpace with go-aspace",
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := aspace.NewClient(env, 20)
-		HandleError(err)
-		err = exportEAD(client)
-		HandleError(err)
+		var err error
+		client, err = aspace.NewClient(env, 20)
+		if err != nil {
+			panic(err)
+		}
+
+		err = ExportResource()
+		if err != nil {
+			panic(err)
+		}
 	},
 }
 
-func init() {
-	exportResourceCmd.Flags().StringVarP(&env, "environment", "e", "dev", "ArchivesSpace environment to be used for export")
-	exportResourceCmd.Flags().IntVar(&repositoryId, "repository", 2, "Repository to be used for export")
-	exportResourceCmd.Flags().IntVar(&resourceId, "resource", 1, "Resource to be exported")
-	exportResourceCmd.Flags().BoolVar(&pretty, "pretty", true, "Pretty format finding aid")
-	rootCmd.AddCommand(exportResourceCmd)
-}
+func ExportResource() error {
+	repository, err := client.GetRepository(repositoryId)
+	if err != nil {
+		return fmt.Errorf("Repistory ID %d does not exist", repository)
+	}
 
-func exportEAD(client *aspace.ASClient) error {
-	log.Println("go-aspace lib", aspace.LibraryVersion)
+	slug := repository.Slug
 
-	//request the resource
-	resource, err := client.GetResource(repositoryId, resourceId)
+	outputDir := filepath.Join(location, slug)
+
+	err = os.MkdirAll(outputDir, 0775)
+	if err != nil {
+		return fmt.Errorf("Could not create an export directory for repository %s", repository)
+	}
+
+	err = exportEAD(resourceId, outputDir)
 	if err != nil {
 		return err
 	}
 
-	//create filename from resource ids
-	outputTitle := resource.ID0
-	for _, id := range []string{resource.ID1, resource.ID2, resource.ID3} {
-		if id != "" {
-			outputTitle = outputTitle + "_" + id
-		}
-	}
-
-	outputTitle = strings.ToLower(outputTitle)
-	log.Println("Exporting", outputTitle)
-	outputTitle = outputTitle + ".xml"
-
-	err = getEADFile(repositoryId, resourceId, ".", resource.EADID, pretty, client)
-	if err != nil {
-		panic(err)
-	}
-
-	//done
-	log.Printf("Export of %s complete\n", resource.EADID)
 	return nil
 }
