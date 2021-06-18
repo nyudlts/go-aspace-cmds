@@ -31,7 +31,8 @@ func sample() error {
 	var r1 = rand.New(s1)
 
 	//get a client
-	client, err := aspace.NewClient("fade", 20)
+	var err error
+	client, err = aspace.NewClient("/etc/go-aspace.yml", env, 20)
 	if err != nil {
 		return err
 	}
@@ -58,7 +59,7 @@ func sample() error {
 		resourceIds := repositoryResourceIds[repoId]
 		resourceId := resourceIds[r1.Intn(len(resourceIds))]
 		fmt.Println("attempting to serialize", repoId, resourceId)
-		if getEADFile(repoId, resourceId, "", "TEMP", true, client) == nil {
+		if getEADFile(repoId, resourceId, "", "failure",  "TEMP", true, client) == nil {
 			validEadCount = validEadCount + 1
 		}
 	}

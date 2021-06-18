@@ -22,7 +22,7 @@ var exportResourceCmd = &cobra.Command{
 	Short: "export an EAD from ArchivesSpace with go-aspace",
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
-		client, err = aspace.NewClient(env, 20)
+		client, err = aspace.NewClient("/etc/go-aspace.yml", env, 20)
 		if err != nil {
 			panic(err)
 		}
@@ -49,7 +49,7 @@ func ExportResource() error {
 		return fmt.Errorf("Could not create an export directory for repository %s", repository)
 	}
 
-	err = exportEAD(resourceId, outputDir)
+	err = exportEAD(resourceId, outputDir, "failures")
 	if err != nil {
 		return err
 	}

@@ -11,9 +11,10 @@ import (
 )
 
 func init() {
-	exportRepoCmd.Flags().StringVarP(&env, "environment", "e", "", "ArchivesSpace environment to be used for export")
-	exportRepoCmd.Flags().IntVarP(&repositoryId, "repository", "r", 2, "Repository to be used for export")
-	exportRepoCmd.Flags().StringVarP(&location, "location", "l", ".", "location to export finding aids")
+	exportRepoCmd.Flags().StringVar(&env, "environment",  "", "ArchivesSpace environment to be used for export")
+	exportRepoCmd.Flags().IntVar(&repositoryId, "repository",  2, "Repository to be used for export")
+	exportRepoCmd.Flags().StringVar(&location, "location",  ".", "location to export finding aids")
+	exportRepoCmd.Flags().StringVar(&failureLoc, "failure-location", "failures", "location to export validation failures")
 	exportRepoCmd.Flags().BoolVar(&pretty, "pretty", false, "Pretty format finding aid")
 	rootCmd.AddCommand(exportRepoCmd)
 }
@@ -24,7 +25,7 @@ var exportRepoCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		flag.Parse()
 		var err error
-		client, err = aspace.NewClient(env, 20)
+		client, err = aspace.NewClient("/etc/go-aspace.yml", env, 20)
 		HandleError(err)
 
 		fmt.Printf("go-aspace version %s\n", aspace.LibraryVersion)
@@ -64,7 +65,7 @@ func exportRepo(repoId int) error {
 	}
 
 	for _, resourceId := range resourceIds {
-		err = exportEAD(resourceId, outputDir)
+		err = exportEAD(resourceId, outputDir, "failures")
 		if err != nil {
 			log.Println(err.Error())
 		}

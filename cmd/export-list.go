@@ -24,7 +24,8 @@ var exportListCmd = &cobra.Command{
 	Short: "Export a ead finding aids from a list",
 	Run: func(cmd *cobra.Command, args []string) {
 		flag.Parse()
-		client, err := aspace.NewClient(env, 20)
+		var err error
+		client, err = aspace.NewClient("/etc/go-aspace.yml", env, 20)
 		HandleError(err)
 
 		err = exportList(client)
@@ -71,7 +72,7 @@ func exportList(client *aspace.ASClient) error {
 		}
 
 		//write the ead file to the repo path
-		err = getEADFile(repositoryId, resourceId, repoPath, resource.EADID, pretty, client)
+		err = getEADFile(repositoryId, resourceId, repoPath, "failures", resource.EADID, pretty, client)
 		if err != nil {
 			log.Println("FAILURE")
 		}

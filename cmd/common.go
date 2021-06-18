@@ -12,14 +12,15 @@ import (
 )
 
 var (
-	client       *aspace.ASClient
-	env          string
-	repositoryId int
-	resourceId   int
-	timeout      int
-	location     string
-	pretty       bool
-	input        string
+	client       	*aspace.ASClient
+	env          	string
+	repositoryId 	int
+	resourceId   	int
+	timeout      	int
+	location     	string
+	failureLoc		string
+	pretty       	bool
+	input        	string
 )
 
 var shortNames = map[int]string{
@@ -44,7 +45,7 @@ func HandleError(err error) {
 	}
 }
 
-func exportEAD(resId int, outputDir string) error {
+func exportEAD(resId int, outputDir string, failureDir string) error {
 	resource, err := client.GetResource(repositoryId, resId)
 	if err != nil {
 		msg := fmt.Errorf("WARNING Could not get resource %d from repo %d, skipping", resourceId, repositoryId)
@@ -61,7 +62,7 @@ func exportEAD(resId int, outputDir string) error {
 
 		log.Println("INFO exporting", eadFilename+".xml", resource.URI)
 
-		err = getEADFile(repositoryId, resId, outputDir, eadFilename, pretty, client)
+		err = getEADFile(repositoryId, resId, outputDir, failureDir, eadFilename, pretty, client)
 		if err != nil {
 			log.Println("ERROR", err.Error())
 		} else {
@@ -72,7 +73,7 @@ func exportEAD(resId int, outputDir string) error {
 	return nil
 }
 
-func getEADFile(repoId int, resourceId int, loc string, eadid string, pretty bool, client *aspace.ASClient) error {
+func getEADFile(repoId int, resourceId int, loc string, failureLoc string, eadid string, pretty bool, client *aspace.ASClient) error {
 
 	ead, err := client.GetEADAsByteArray(repoId, resourceId)
 	if err != nil {
@@ -85,6 +86,8 @@ func getEADFile(repoId int, resourceId int, loc string, eadid string, pretty boo
 
 	err = aspace.ValidateEAD(ead)
 	if err != nil {
+		exportFile := filepath.Join(failureLoc, eadid + ".xml")
+		ioutil.WriteFile(exportFile, ead, 0644)
 		return fmt.Errorf("EAD validation failed on %s", eadid)
 	}
 
